@@ -8,7 +8,7 @@
     "db:migrate": "drizzle-kit generate",
     "db:apply": "wrangler d1 migrations apply cloudflare-utils-headless-oauth --local",
     "db:apply:remote": "wrangler d1 migrations apply cloudflare-utils-headless-oauth --remote",
-    "test": "vitest run"
+    "test": "vitest run --coverage"
   },
   "dependencies": {
     "@cloudflare/workers-oauth-provider": "^0.8.3",
