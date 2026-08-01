@@ -1,0 +1,81 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "175611f3-f25f-4fb5-9689-9be5e5a22951",
+  "prevIds": [
+    "2063ed49-b0d7-4f6f-8815-63ddd5ded1f6"
+  ],
+  "ddl": [
+    {
+      "name": "registrations",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "registrationId",
+      "entityType": "columns",
+      "table": "registrations"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "codeVerifier",
+      "entityType": "columns",
+      "table": "registrations"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "accessToken",
+      "entityType": "columns",
+      "table": "registrations"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expiresAt",
+      "entityType": "columns",
+      "table": "registrations"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "retrieveToken",
+      "entityType": "columns",
+      "table": "registrations"
+    },
+    {
+      "columns": [
+        {
+          "value": "registrationId",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "idx_registrationId",
+      "entityType": "indexes",
+      "table": "registrations"
+    }
+  ],
+  "renames": [
+    "tokens->registrations"
+  ]
+}

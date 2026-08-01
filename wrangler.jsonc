@@ -1,0 +1,32 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "cloudflare-utils-headless-oauth",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-01",
+	"d1_databases": [
+		{
+			"binding": "D1",
+			"database_name": "cloudflare-utils-headless-oauth",
+			"database_id": "c26eb7d7-8a2f-4b3f-98e0-ec6ec6f51944",
+			"migrations_dir": "./drizzle",
+			"migrations_pattern": "drizzle/*/migration.sql"
+		}
+	],
+	"observability": {
+		"enabled": true,
+		"traces": {
+			"enabled": true,
+			"destinations": ["rackspace-tempo"]
+		},
+		"logs": {
+			"enabled": true,
+			"destinations": ["rackspace-loki"]
+		}
+	},
+	"routes": [
+		{ "pattern": "cloudflare-utils.cyberjake.xyz/oauth/*", "zone_name": "cyberjake.xyz" }
+	],
+	"vars": {
+		"CLIENT_ID": "0d52ae70cc5a9d93db44cb8874bb17b5"
+	}
+}
