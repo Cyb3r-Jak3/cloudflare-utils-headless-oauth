@@ -37,7 +37,9 @@ jobs:
 
       - name: Test
         if: ${{github.ref_type == 'branch'}}
-        run: pnpm run test
+        run: |
+          echo "CLIENT_ID=2548590435893489508349" >> .dev.vars
+          pnpm run test
 
       - name: Deploy to Cloudflare with Wrangler
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0

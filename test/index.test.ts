@@ -1,12 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
 import app from '../src/index'
 import { registrationsTable } from '../src/schema'
+import { env } from "cloudflare:workers"
 
-const CLIENT_ID = 'bec7176151194b99ec5c0b907e74f567'
-
+const CLIENT_ID = env.CLIENT_ID
 function makeOAuthProvider(overrides: Partial<{
   parseAuthRequest: ReturnType<typeof vi.fn>
   lookupClient: ReturnType<typeof vi.fn>
