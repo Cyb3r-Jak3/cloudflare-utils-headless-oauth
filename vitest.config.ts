@@ -39,6 +39,12 @@ export default defineConfig(async () => {
     })],
     test: {
       setupFiles: ["./test/apply-migrations.ts"],
-    }
+      reporters: ['default', 'junit'],
+      outputFile: './junit.xml',
+      coverage: {
+        provider: 'istanbul',
+        reporter: ['text', 'json',]
+      }
+    },
   });
 })

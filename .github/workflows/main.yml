@@ -18,6 +18,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -40,6 +43,19 @@ jobs:
         run: |
           echo "CLIENT_ID=2548590435893489508349" >> .dev.vars
           pnpm run test
+
+      - name: Upload coverage reports to Codecov
+        if: ${{ !cancelled() && github.ref_type == 'branch' }}
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+            use_oidc: true
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && github.ref_type == 'branch' }}
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+            use_oidc: true
+            report_type: 'test_results'
 
       - name: Deploy to Cloudflare with Wrangler
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
