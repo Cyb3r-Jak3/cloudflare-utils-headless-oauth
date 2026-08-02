@@ -3,6 +3,7 @@
 	"name": "cloudflare-utils-headless-oauth",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-08-01",
+	"send_metrics": false,
 	"d1_databases": [
 		{
 			"binding": "D1",
