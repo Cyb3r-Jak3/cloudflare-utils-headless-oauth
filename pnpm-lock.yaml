@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       drizzle-orm:
-        specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4(zod@4.4.3)
+        specifier: 1.0.0-rc.4-de6c356
+        version: 1.0.0-rc.4-de6c356(zod@4.4.3)
       hono:
         specifier: ^4.12.33
         version: 4.12.33
@@ -902,8 +902,8 @@ packages:
     resolution: {integrity: sha512-hM1K72ptIPOpJDScHo7cAF+K8A8Tr3q2yHvBJvOZWvLn2lN+G4RDUvG3rT3ohlSE2O3BN/s7g3e3JiQLStt8iQ==}
     hasBin: true
 
-  drizzle-orm@1.0.0-rc.4:
-    resolution: {integrity: sha512-BT+pf+qoiYHqltoA88Jmf6ilGMXPlpfE0hEJKc2adRtMCAl25Swk/t5gXcWxZNAwdtf3F5gCd2FpeOyP/pT0Hw==}
+  drizzle-orm@1.0.0-rc.4-de6c356:
+    resolution: {integrity: sha512-ko2vuulph5Mub23KBFQusBhJmZ25jcwqPRfVvUN4NZy992m+zO+4WEgTnqEPYLJSKPKFoKRc1oR6G7pMj57xqg==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -943,6 +943,7 @@ packages:
       bun-types: '*'
       effect: '>=4.0.0-beta.83 || >=4.0.0'
       expo-sqlite: '>=14.0.0'
+      minipg: '>=0.1.0'
       mssql: ^11.0.1
       mysql2: '>=2'
       pg: '>=8'
@@ -1028,6 +1029,8 @@ packages:
       effect:
         optional: true
       expo-sqlite:
+        optional: true
+      minipg:
         optional: true
       mssql:
         optional: true
@@ -2131,7 +2134,7 @@ snapshots:
       get-tsconfig: 4.14.0
       jiti: 2.7.0
 
-  drizzle-orm@1.0.0-rc.4(zod@4.4.3):
+  drizzle-orm@1.0.0-rc.4-de6c356(zod@4.4.3):
     optionalDependencies:
       zod: 4.4.3
 
