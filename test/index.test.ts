@@ -1,37 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
-import app from '../src/index'
 import { registrationsTable } from '../src/schema'
-import { env } from "cloudflare:workers"
+import { env, exports } from "cloudflare:workers"
 
 const CLIENT_ID = env.CLIENT_ID
-function makeOAuthProvider(overrides: Partial<{
-  parseAuthRequest: ReturnType<typeof vi.fn>
-  lookupClient: ReturnType<typeof vi.fn>
-}> = {}) {
-  return {
-    parseAuthRequest: overrides.parseAuthRequest ?? vi.fn(),
-    lookupClient: overrides.lookupClient ?? vi.fn(),
-  }
-}
-
-function testEnv(oauthOverrides = {}) {
-  return {
-    ...env,
-    OAUTH_PROVIDER: makeOAuthProvider(oauthOverrides),
-  }
-}
-
-function mockExecutionContext(): ExecutionContext {
-  return {
-    waitUntil: (promise: Promise<unknown>) => {
-      promise.catch(() => {})
-    },
-    passThroughOnException: () => {},
-    props: {},
-  } as ExecutionContext
-}
 
 const db = () => drizzle(env.D1)
 
@@ -60,7 +33,7 @@ beforeEach(async () => {
 
 describe('POST /oauth/register', () => {
   it('creates a pending registration and returns a poll url', async () => {
-    const res = await app.request('/oauth/register', { method: 'POST' }, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/register', { method: 'POST' })
     expect(res.status).toBe(200)
 
     const body = await res.json() as { registration_id: string; url: string; expires_in: number }
@@ -83,7 +56,7 @@ describe('GET /oauth/register/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) + 600,
     })
 
-    const res = await app.request('/oauth/register/reg-1', { redirect: 'manual' }, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/register/reg-1', { redirect: 'manual' })
     expect(res.status).toBe(302)
 
     const location = new URL(res.headers.get('location')!)
@@ -92,11 +65,11 @@ describe('GET /oauth/register/:registrationId', () => {
     expect(location.searchParams.get('state')).toBe('reg-1')
     expect(location.searchParams.get('code_challenge_method')).toBe('S256')
     expect(location.searchParams.get('code_challenge')).toBeTruthy()
-    expect(location.searchParams.get('redirect_uri')).toBe('http://localhost/oauth/callback')
+    expect(location.searchParams.get('redirect_uri')).toBe('https://example.com/oauth/callback')
   })
 
   it('returns 404 for an unknown registration', async () => {
-    const res = await app.request('/oauth/register/does-not-exist', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/register/does-not-exist')
     expect(res.status).toBe(404)
   })
 
@@ -108,7 +81,7 @@ describe('GET /oauth/register/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) + 600,
     })
 
-    const res = await app.request('/oauth/register/reg-used', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/register/reg-used')
     expect(res.status).toBe(404)
   })
 
@@ -119,7 +92,7 @@ describe('GET /oauth/register/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) - 10,
     })
 
-    const res = await app.request('/oauth/register/reg-expired', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/register/reg-expired')
     expect(res.status).toBe(410)
     expect(await getRegistration('reg-expired')).toBeUndefined()
   })
@@ -149,11 +122,7 @@ describe('GET /oauth/callback', () => {
       }), { status: 200, headers: { 'Content-Type': 'application/json' } })
     })
 
-    const res = await app.request(
-      '/oauth/callback?code=cf-auth-code&state=reg-cb',
-      {},
-      testEnv(),
-    )
+    const res = await exports.default.fetch('https://example.com/oauth/callback?code=cf-auth-code&state=reg-cb', { method: 'GET' })
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(res.status).toBe(200)
@@ -165,17 +134,17 @@ describe('GET /oauth/callback', () => {
   })
 
   it('returns 400 when Cloudflare reports an error', async () => {
-    const res = await app.request('/oauth/callback?error=access_denied&state=reg-cb', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/callback?error=access_denied&state=reg-cb', { method: 'GET' })
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when code or state is missing', async () => {
-    const res = await app.request('/oauth/callback?code=abc', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/callback?code=abc', { method: 'GET' })
     expect(res.status).toBe(400)
   })
 
   it('returns 404 for an unknown registration', async () => {
-    const res = await app.request('/oauth/callback?code=abc&state=missing', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/callback?code=abc&state=missing', { method: 'GET' })
     expect(res.status).toBe(404)
   })
 
@@ -186,11 +155,7 @@ describe('GET /oauth/callback', () => {
       expiresAt: Math.floor(Date.now() / 1000) - 10,
     })
 
-    const res = await app.request(
-      '/oauth/callback?code=abc&state=reg-cb-expired',
-      {},
-      testEnv(),
-    )
+    const res = await exports.default.fetch('https://example.com/oauth/callback?code=abc&state=reg-cb-expired', { method: 'GET' })
     expect(res.status).toBe(410)
   })
 
@@ -203,11 +168,7 @@ describe('GET /oauth/callback', () => {
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('nope', { status: 400 }))
 
-    const res = await app.request(
-      '/oauth/callback?code=abc&state=reg-cb-fail',
-      {},
-      testEnv(),
-    )
+    const res = await exports.default.fetch('https://example.com/oauth/callback?code=abc&state=reg-cb-fail', { method: 'GET' })
     expect(res.status).toBe(502)
   })
 })
@@ -220,7 +181,7 @@ describe('GET /oauth/token/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) + 600,
     })
 
-    const res = await app.request('/oauth/token/reg-tok-pending', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/token/reg-tok-pending', { method: 'GET' })
     expect(res.status).toBe(202)
     expect(await res.json()).toEqual({ status: 'pending' })
   })
@@ -233,20 +194,20 @@ describe('GET /oauth/token/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) + 600,
     })
 
-    const first = await app.request('/oauth/token/reg-tok-done', {}, testEnv())
+    const first = await exports.default.fetch('https://example.com/oauth/token/reg-tok-done', { method: 'GET' })
     expect(first.status).toBe(200)
     expect(first.headers.get('content-type')).toBe('application/json+oauthv1')
     const body = await first.json() as { status: string; access_token: string }
     expect(body.status).toBe('complete')
     expect(body.access_token).toBe('issued-token')
 
-    const second = await app.request('/oauth/token/reg-tok-done', {}, testEnv())
+    const second = await exports.default.fetch('https://example.com/oauth/token/reg-tok-done', { method: 'GET' })
     expect(second.status).toBe(404)
     expect(await second.json()).toEqual({ status: 'not_found' })
   })
 
   it('returns not_found for an unknown registration', async () => {
-    const res = await app.request('/oauth/token/does-not-exist', {}, testEnv())
+    const res = await exports.default.fetch('https://example.com/oauth/token/does-not-exist', { method: 'GET' })
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ status: 'not_found' })
   })
@@ -258,7 +219,7 @@ describe('GET /oauth/token/:registrationId', () => {
       expiresAt: Math.floor(Date.now() / 1000) - 10,
     })
 
-    const res = await app.request('/oauth/token/reg-tok-expired', {}, testEnv(), mockExecutionContext())
+    const res = await exports.default.fetch('https://example.com/oauth/token/reg-tok-expired', { method: 'GET' })
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ status: 'not_found' })
   })
@@ -266,55 +227,50 @@ describe('GET /oauth/token/:registrationId', () => {
 
 describe('GET /oauth/authorize', () => {
   it('returns 400 when the auth request cannot be parsed', async () => {
-    const parseAuthRequest = vi.fn().mockRejectedValue(new Error('bad request'))
-    const res = await app.request('/oauth/authorize', {}, testEnv({ parseAuthRequest }))
+    const res = await exports.default.fetch('https://example.com/oauth/authorize', { method: 'GET' })
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when the client id does not match', async () => {
-    const parseAuthRequest = vi.fn().mockResolvedValue({
-      clientId: 'someone-else',
-      redirectUri: 'https://example.com/cb',
-      responseType: 'code',
-      scope: ['page.write'],
+    const params = new URLSearchParams({
+      client_id: 'someone-else',
+      redirect_uri: 'https://example.com/cb',
+      response_type: 'code',
+      scope: 'page.write',
       state: 'xyz',
     })
-    const lookupClient = vi.fn().mockResolvedValue({ clientId: 'someone-else', redirectUris: ['https://example.com/cb'] })
 
-    const res = await app.request('/oauth/authorize', {}, testEnv({ parseAuthRequest, lookupClient }))
+    const res = await exports.default.fetch(`https://example.com/oauth/authorize?${params.toString()}`, { method: 'GET' })
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when the redirect URI is not registered for the client', async () => {
-    const parseAuthRequest = vi.fn().mockResolvedValue({
-      clientId: CLIENT_ID,
-      redirectUri: 'https://evil.example.com/cb',
-      responseType: 'code',
-      scope: ['page.write'],
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      redirect_uri: 'https://evil.example.com/cb',
+      response_type: 'code',
+      scope: 'page.write',
       state: 'xyz',
     })
-    const lookupClient = vi.fn().mockResolvedValue({ clientId: CLIENT_ID, redirectUris: ['https://example.com/cb'] })
 
-    const res = await app.request('/oauth/authorize', {}, testEnv({ parseAuthRequest, lookupClient }))
+    const res = await exports.default.fetch(`https://example.com/oauth/authorize?${params.toString()}`, { method: 'GET' })
     expect(res.status).toBe(400)
   })
 
   it('redirects to the login page with the request parameters', async () => {
-    const parseAuthRequest = vi.fn().mockResolvedValue({
-      clientId: CLIENT_ID,
-      redirectUri: 'https://example.com/cb',
-      responseType: 'code',
-      scope: ['page.write', 'dns.write'],
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      redirect_uri: 'https://example.com/cb',
+      response_type: 'code',
+      scope: 'page.write dns.write',
       state: 'xyz',
-      codeChallenge: 'challenge-value',
-      codeChallengeMethod: 'S256',
+      code_challenge: 'challenge-value',
+      code_challenge_method: 'S256',
     })
-    const lookupClient = vi.fn().mockResolvedValue({ clientId: CLIENT_ID, redirectUris: ['https://example.com/cb'] })
 
-    const res = await app.request(
-      '/oauth/authorize',
-      { redirect: 'manual' },
-      testEnv({ parseAuthRequest, lookupClient }),
+    const res = await exports.default.fetch(
+      `https://example.com/oauth/authorize?${params.toString()}`,
+      { method: 'GET', redirect: 'manual' },
     )
     expect(res.status).toBe(302)
 

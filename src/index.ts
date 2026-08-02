@@ -1,14 +1,10 @@
 import { Hono } from 'hono'
-import { type AuthRequest, type OAuthHelpers } from '@cloudflare/workers-oauth-provider';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { registrationsTable } from './schema';
+import {scheduled} from './scheduled'
 
-interface ExtendedEnv extends CloudflareBindings {
-  OAUTH_PROVIDER: OAuthHelpers
-}
-
-const app = new Hono<{Bindings: ExtendedEnv}>().basePath('/oauth')
+const app = new Hono<{Bindings: CloudflareBindings}>().basePath('/oauth')
 const SCOPES = 'page.write dns.write zone.read account-rule-lists.write teams-connectors.read cache.purge'
 
 const CF_AUTHORIZE_URL = 'https://dash.cloudflare.com/oauth2/auth'
@@ -41,33 +37,40 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   return base64UrlEncode(new Uint8Array(digest))
 }
 
+// This worker only ever serves a single client, so the client and its
+// allowed redirect URIs are configured directly via env instead of a
+// dynamic client store.
 app.get('/authorize', async (c) => {
-  let oauthRequest: AuthRequest;
-  try {
-    oauthRequest = await c.env.OAUTH_PROVIDER.parseAuthRequest(c.req.raw)
-  } catch {
-    // Do not redirect until the client and redirect URI have been validated.
+  const query = c.req.query()
+  const clientId = query.client_id
+  const redirectUri = query.redirect_uri
+  const responseType = query.response_type
+  const state = query.state
+  const scope = query.scope ?? ''
+  const codeChallenge = query.code_challenge
+  const codeChallengeMethod = query.code_challenge_method
+
+  if (!clientId || !redirectUri || !responseType || !state) {
     return new Response('Invalid authorization request', { status: 400 });
   }
-  const client = await c.env.OAUTH_PROVIDER.lookupClient(oauthRequest.clientId);
-  if (!client || client.clientId !== c.env.CLIENT_ID) {
+  if (clientId !== c.env.CLIENT_ID) {
     return new Response('Invalid client', { status: 400 });
   }
-  const redirectUri = oauthRequest.redirectUri;
-  if (!redirectUri || !client.redirectUris.includes(redirectUri)) {
+  const allowedRedirectUris = c.env.REDIRECT_URIS.split(',')
+  if (!allowedRedirectUris.includes(redirectUri)) {
     return new Response('Invalid redirect URI', { status: 400 });
   }
   // If the request is valid, redirect to the login page.
   const loginParams = new URLSearchParams({
-    client_id: oauthRequest.clientId,
-    redirect_uri: oauthRequest.redirectUri,
-    response_type: oauthRequest.responseType,
-    scope: oauthRequest.scope.join(' '),
-    state: oauthRequest.state,
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: responseType,
+    scope,
+    state,
   });
-  if (oauthRequest.codeChallenge) {
-    loginParams.set('code_challenge', oauthRequest.codeChallenge);
-    loginParams.set('code_challenge_method', oauthRequest.codeChallengeMethod ?? 'plain');
+  if (codeChallenge) {
+    loginParams.set('code_challenge', codeChallenge);
+    loginParams.set('code_challenge_method', codeChallengeMethod ?? 'plain');
   }
   return c.redirect(`/login?${loginParams.toString()}`);
 })
@@ -207,5 +210,8 @@ app.get('/token/:registrationId', async (c) => {
 
   return c.json({ status: 'pending' }, 202)
 })
-  
-export default app
+
+export default {
+  fetch: app.fetch,
+  scheduled: scheduled
+}
