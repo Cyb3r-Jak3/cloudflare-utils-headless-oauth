@@ -30,5 +30,8 @@
 	"vars": {
 		"CLIENT_ID": "0d52ae70cc5a9d93db44cb8874bb17b5",
 		"REDIRECT_URIS": "https://cloudflare-utils.cyberjake.xyz/oauth/callback"
+	},
+	"triggers": {
+		"crons": ["0 * * * *"]
 	}
 }
