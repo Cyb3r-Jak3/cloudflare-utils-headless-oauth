@@ -15,7 +15,7 @@
     "hono": "^4.12.33"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.20.1",
+    "@cloudflare/vitest-pool-workers": "^0.21.0",
     "@types/node": "^26.1.2",
     "@vitest/coverage-istanbul": "^4.1.10",
     "drizzle-kit": "1.0.0-rc.4-ca0f029",
