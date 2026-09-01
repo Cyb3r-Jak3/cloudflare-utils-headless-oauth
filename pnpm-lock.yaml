@@ -25,8 +25,8 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(supports-color@10.2.2)(vitest@4.1.10)
       drizzle-kit:
-        specifier: 1.0.0-rc.4-ca0f029
-        version: 1.0.0-rc.4-ca0f029
+        specifier: 1.0.0-rc.5-ab785fc
+        version: 1.0.0-rc.5-ab785fc
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -190,8 +190,8 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@drizzle-team/brocli@0.11.0':
-    resolution: {integrity: sha512-hD3pekGiPg0WPCCGAZmusBBJsDqGUR66Y452YgQsZOnkdQ7ViEPKuyP4huUGEZQefp8g34RRodXYmJ2TbCH+tg==}
+  '@drizzle-team/brocli@0.12.0':
+    resolution: {integrity: sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ==}
 
   '@emnapi/core@2.0.0-alpha.3':
     resolution: {integrity: sha512-AZypUeJ/yByuxyS7BlSNRDOMLMlROYtjYdIAuBmJssVz1UJDSeYxLrdizhXCFYhedC5bqd/ASy8EuNXbVVXp9g==}
@@ -928,8 +928,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  drizzle-kit@1.0.0-rc.4-ca0f029:
-    resolution: {integrity: sha512-hM1K72ptIPOpJDScHo7cAF+K8A8Tr3q2yHvBJvOZWvLn2lN+G4RDUvG3rT3ohlSE2O3BN/s7g3e3JiQLStt8iQ==}
+  drizzle-kit@1.0.0-rc.5-ab785fc:
+    resolution: {integrity: sha512-TSg7sK1finOxdo48O9mDfyMY3lhi/aHCVIil5TFhthyq/H/89H/3nwX5V9Gdp7HYMUGFHyWJD5iowSn98l0elw==}
     hasBin: true
 
   drizzle-orm@1.0.0-rc.4-de6c356:
@@ -1696,7 +1696,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@drizzle-team/brocli@0.11.0': {}
+  '@drizzle-team/brocli@0.12.0': {}
 
   '@emnapi/core@2.0.0-alpha.3':
     dependencies:
@@ -2196,9 +2196,9 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  drizzle-kit@1.0.0-rc.4-ca0f029:
+  drizzle-kit@1.0.0-rc.5-ab785fc:
     dependencies:
-      '@drizzle-team/brocli': 0.11.0
+      '@drizzle-team/brocli': 0.12.0
       '@js-temporal/polyfill': 0.5.1
       esbuild: 0.25.12
       get-tsconfig: 4.14.0
