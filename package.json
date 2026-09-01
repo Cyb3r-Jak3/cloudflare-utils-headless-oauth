@@ -11,7 +11,7 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "drizzle-orm": "1.0.0-rc.4-de6c356",
+    "drizzle-orm": "1.0.0-rc.5-ab785fc",
     "hono": "^4.12.33"
   },
   "devDependencies": {
