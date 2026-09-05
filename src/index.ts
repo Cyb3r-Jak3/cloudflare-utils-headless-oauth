@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { registrationsTable } from './schema';
 import {scheduled} from './scheduled'
+import { EncodeBase64, NowSeconds } from '@cyb3r-jak3/workers-common'
 
 const app = new Hono<{Bindings: CloudflareBindings}>().basePath('/oauth')
 const SCOPES = 'page.write dns.write zone.read account-rule-lists.write teams-connectors.read cache.purge'
@@ -11,9 +12,6 @@ const CF_AUTHORIZE_URL = 'https://dash.cloudflare.com/oauth2/auth'
 const CF_TOKEN_URL = 'https://dash.cloudflare.com/oauth2/token'
 const REGISTRATION_TTL_SECONDS = 600
 
-function nowSeconds(): number {
-  return Math.floor(Date.now() / 1000)
-}
 
 interface CloudflareTokenResponse {
   access_token: string
@@ -22,19 +20,13 @@ interface CloudflareTokenResponse {
   scope?: string
 }
 
-function base64UrlEncode(bytes: Uint8Array): string {
-  let binary = ''
-  for (const byte of bytes) binary += String.fromCharCode(byte)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
 function generateCodeVerifier(): string {
-  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(64)))
+  return EncodeBase64(crypto.getRandomValues(new Uint8Array(64)))
 }
 
 async function generateCodeChallenge(verifier: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
-  return base64UrlEncode(new Uint8Array(digest))
+  return EncodeBase64(new Uint8Array(digest))
 }
 
 // This worker only ever serves a single client, so the client and its
@@ -80,7 +72,7 @@ app.get('/authorize', async (c) => {
 app.post('/register', async (c) => {
   const registrationId = crypto.randomUUID()
   const codeVerifier = generateCodeVerifier()
-  const expiresAt = nowSeconds() + REGISTRATION_TTL_SECONDS
+  const expiresAt = NowSeconds() + REGISTRATION_TTL_SECONDS
 
   const db = drizzle(c.env.D1)
   await db.insert(registrationsTable).values({
@@ -107,7 +99,7 @@ app.get('/register/:registrationId', async (c) => {
   if (!row || !row.codeVerifier || row.accessToken) {
     return new Response('Registration not found or already used', { status: 404 })
   }
-  if (row.expiresAt <= nowSeconds()) {
+  if (row.expiresAt <= NowSeconds()) {
     await db.delete(registrationsTable).where(eq(registrationsTable.registrationId, registrationId))
     return new Response('Registration expired', { status: 410 })
   }
@@ -146,7 +138,7 @@ app.get('/callback', async (c) => {
   if (!row || !row.codeVerifier || row.accessToken) {
     return new Response('Registration not found or already used', { status: 404 })
   }
-  if (row.expiresAt <= nowSeconds()) {
+  if (row.expiresAt <= NowSeconds()) {
     await db.delete(registrationsTable).where(eq(registrationsTable.registrationId, registrationId))
     return new Response('Registration expired', { status: 410 })
   }
@@ -172,7 +164,7 @@ app.get('/callback', async (c) => {
     .set({
       codeVerifier: null,
       accessToken: tokens.access_token,
-      expiresAt: nowSeconds() + tokens.expires_in,
+      expiresAt: NowSeconds() + tokens.expires_in,
     })
     .where(eq(registrationsTable.registrationId, registrationId))
 
@@ -203,7 +195,7 @@ app.get('/token/:registrationId', async (c) => {
     }, 200, { 'Content-Type': OAUTH_V1_CONTENT_TYPE })
   }
 
-  if (row.expiresAt <= nowSeconds()) {
+  if (row.expiresAt <= NowSeconds()) {
     c.executionCtx.waitUntil(db.delete(registrationsTable).where(eq(registrationsTable.registrationId, registrationId)))
     return c.json({ status: 'not_found' }, 404, { 'Content-Type': OAUTH_V1_CONTENT_TYPE })
   }
