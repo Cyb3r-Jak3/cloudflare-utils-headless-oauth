@@ -13,7 +13,7 @@
   "dependencies": {
     "@cyb3r-jak3/workers-common": "^6.0.0",
     "drizzle-orm": "1.0.0-rc.5-ab785fc",
-    "hono": "^4.12.33"
+    "hono": "^4.13.5"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.22.0",
