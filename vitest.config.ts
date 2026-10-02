@@ -1,7 +1,7 @@
 import {
 	cloudflareTest,
 	type D1Migration,
-} from "@cloudflare/vitest-pool-workers";
+} from "@cloudflare/vitest-plugin";
 import { defineConfig, defineProject } from "vitest/config";
 import fs from "node:fs";
 import path from "node:path";
